@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ERD | SPUC Treasury</title>
+  <script src="./libs/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d1b3e; font-family: 'Segoe UI', sans-serif; color: #fff; padding: 32px; }
+    h1 { text-align: center; font-size: 1.6rem; margin-bottom: 6px; letter-spacing: 1px; color: #f5a623; }
+    p.sub { text-align: center; font-size: 0.85rem; color: #aab4d4; margin-bottom: 28px; }
+
+    .pages-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .page-badge {
+      border-radius: 10px;
+      padding: 14px 24px;
+      font-size: 0.82rem;
+      text-align: center;
+      min-width: 180px;
+    }
+    .page-badge .role  { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .page-badge .route { font-size: 0.75rem; opacity: 0.75; margin-bottom: 4px; }
+    .page-badge .desc  { font-size: 0.72rem; opacity: 0.65; }
+    .badge-super  { background: #3b1f6e; border: 1.5px solid #a78bfa; }
+    .badge-admin  { background: #1a3a5e; border: 1.5px solid #60a5fa; }
+    .badge-public { background: #1a3e2a; border: 1.5px solid #34d399; }
+
+    .erd-wrap {
+      background: #fff;
+      border-radius: 12px;
+      padding: 32px;
+      overflow-x: auto;
+    }
+    .mermaid { min-width: 1100px; }
+
+    .legend {
+      margin-top: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+    .legend-item {
+      background: #1a2f5e;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.78rem;
+      color: #cdd6f4;
+    }
+    .legend-item span { font-weight: 700; }
+    .legend-item span.s { color: #a78bfa; }
+    .legend-item span.a { color: #60a5fa; }
+    .legend-item span.p { color: #34d399; }
+  </style>
+</head>
+<body>
+
+  <h1>SPUC Treasury — Entity Relationship Diagram</h1>
+  <p class="sub">Southwestern Philippine Union Conference · Database Schema Blueprint</p>
+
+  <!-- Page / Role Overview -->
+  <div class="pages-row">
+    <div class="page-badge badge-super">
+      <div class="role">🔐 Superadmin</div>
+      <div class="route">/superadmin</div>
+      <div class="desc">Manages treasury staff accounts</div>
+    </div>
+    <div class="page-badge badge-admin">
+      <div class="role">🏦 Admin (Treasury Staff)</div>
+      <div class="route">/admin</div>
+      <div class="desc">Inputs tithes, offerings, reconciliation & financial statements</div>
+    </div>
+    <div class="page-badge badge-public">
+      <div class="role">🌐 Public Viewer</div>
+      <div class="route">/ (current site)</div>
+      <div class="desc">View-only charts & financial summaries</div>
+    </div>
+  </div>
+
+  <div class="erd-wrap">
+    <div class="mermaid">
+erDiagram
+
+  tbl_superadmin {
+    int     superadminID  PK
+    string  name
+    string  email
+    string  username
+    string  password
+  }
+
+  tbl_admin {
+    int     adminID         PK
+    int     superadminID    FK
+    string  name
+    string  email
+    string  username
+    string  password
+    string  status
+    date    created_at
+  }
+
+  tbl_mission {
+    int     missionID     PK
+    int     adminID       FK
+    string  name
+    string  address
+    string  contactNo
+    string  email
+  }
+
+  tbl_fiscal_year {
+    int     yearID        PK
+    int     year
+    date    start_date
+    date    end_date
+  }
+
+  tbl_budget {
+    int     budgetID        PK
+    int     missionID       FK
+    int     yearID          FK
+    int     month
+    decimal tithe_budget
+    decimal offering_budget
+  }
+
+  tbl_tithes {
+    int     tithesID      PK
+    int     missionID     FK
+    int     yearID        FK
+    int     month
+    decimal amount
+    date    date_recorded
+  }
+
+  tbl_offerings {
+    int     offeringsID   PK
+    int     missionID     FK
+    int     yearID        FK
+    int     month
+    decimal amount
+    date    date_recorded
+  }
+
+  tbl_reconciliation {
+    int     reconID       PK
+    int     missionID     FK
+    int     yearID        FK
+    string  ref_number
+    date    date_received
+    string  description
+    decimal book_amount
+    decimal bank_amount
+    decimal difference
+    string  status
+  }
+
+  tbl_financial_stmt {
+    int     fsID                      PK
+    int     yearID                    FK
+    int     month
+    decimal tithes_received
+    decimal offerings_received
+    decimal other_income
+    decimal admin_expenses
+    decimal ministry_expenses
+    decimal education_expenses
+    decimal community_expenses
+    decimal remittance_to_division
+    decimal cash_beginning
+    decimal purchase_of_equipment
+    decimal proceeds_asset_disposal
+    decimal unrestricted_net_assets
+    decimal restricted_net_assets
+  }
+
+  tbl_reportHistory {
+    int     historyID     PK
+    int     adminID       FK
+    int     missionID     FK
+    int     yearID        FK
+    string  action
+    date    date
+  }
+
+  tbl_superadmin    ||--o{ tbl_admin            : "creates & manages"
+
+  tbl_admin         ||--o{ tbl_mission          : "manages"
+  tbl_admin         ||--o{ tbl_reportHistory    : "logs"
+
+  tbl_mission       ||--o{ tbl_tithes           : "submits"
+  tbl_mission       ||--o{ tbl_offerings        : "submits"
+  tbl_mission       ||--o{ tbl_budget           : "has"
+  tbl_mission       ||--o{ tbl_reconciliation   : "reconciles"
+  tbl_mission       ||--o{ tbl_reportHistory    : "tracked in"
+
+  tbl_fiscal_year   ||--o{ tbl_tithes           : "covers"
+  tbl_fiscal_year   ||--o{ tbl_offerings        : "covers"
+  tbl_fiscal_year   ||--o{ tbl_budget           : "covers"
+  tbl_fiscal_year   ||--o{ tbl_reconciliation   : "covers"
+  tbl_fiscal_year   ||--o{ tbl_financial_stmt   : "covers"
+  tbl_fiscal_year   ||--o{ tbl_reportHistory    : "covers"
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="s">tbl_superadmin</span> — Top-level user, manages treasury staff</div>
+    <div class="legend-item"><span class="a">tbl_admin</span> — Treasury staff, inputs financial data</div>
+    <div class="legend-item"><span class="a">tbl_mission</span> — NCMC, CMM, NMM, WMC, ZPM</div>
+    <div class="legend-item"><span class="a">tbl_fiscal_year</span> — 2025, 2026, …</div>
+    <div class="legend-item"><span class="a">tbl_budget</span> — Monthly targets per mission per year</div>
+    <div class="legend-item"><span class="a">tbl_tithes</span> — Monthly tithe actuals per mission</div>
+    <div class="legend-item"><span class="a">tbl_offerings</span> — Monthly offering actuals per mission</div>
+    <div class="legend-item"><span class="a">tbl_reconciliation</span> — Book vs bank per transaction</div>
+    <div class="legend-item"><span class="a">tbl_financial_stmt</span> — Union-level income, balance sheet, cash flow, equity</div>
+    <div class="legend-item"><span class="a">tbl_reportHistory</span> — Audit trail of admin actions</div>
+    <div class="legend-item"><span class="p">Public Viewer</span> — Reads from all tables, no write access</div>
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default', er: { diagramPadding: 30 } });
+  </script>
+</body>
+</html>
