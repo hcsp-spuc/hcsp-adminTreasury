@@ -22,14 +22,15 @@
 
     <div class="card">
         <h3>SUPER ADMIN LOGIN</h3>
-        <form action="" method="POST">
+        <p id="error-msg" style="color:#ff6b6b;font-size:0.82rem;min-height:18px;margin-bottom:8px;"></p>
+        <form id="login-form">
             <div class="input-group">
-                <span>🔒</span>
-                <input type="text" placeholder="Username" required>
+                <span>👤</span>
+                <input type="text" id="username" placeholder="Username" required>
             </div>
             <div class="input-group">
                 <span>🔒</span>
-                <input type="password" placeholder="Password" required>
+                <input type="password" id="password" placeholder="Password" required>
             </div>
             <button type="submit">LOGIN</button>
         </form>
@@ -37,5 +38,32 @@
     </div>
 
     <footer>User Connection: 100</footer>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorMsg = document.getElementById('error-msg');
+            errorMsg.textContent = '';
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await fetch('/superadmin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    window.location.href = '/superadmin/dashboard.html';
+                } else {
+                    errorMsg.textContent = data.message || 'Invalid credentials.';
+                }
+            } catch {
+                errorMsg.textContent = 'Server error. Please try again.';
+            }
+        });
+    </script>
 </body>
 </html>

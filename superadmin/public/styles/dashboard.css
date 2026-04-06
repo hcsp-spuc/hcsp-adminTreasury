@@ -1,0 +1,243 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    display: flex;
+    min-height: 100vh;
+    background: #f0f4f8;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 220px;
+    background: linear-gradient(180deg, #0d3b8e 0%, #0a2a6e 100%);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+    gap: 8px;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    margin-bottom: 28px;
+}
+
+.sidebar-logo img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.sidebar-logo span {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.nav-item {
+    display: block;
+    padding: 10px 14px;
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    transition: background 0.2s, color 0.2s;
+}
+
+.nav-item:hover, .nav-item.active {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+}
+
+.logout-btn {
+    margin-top: auto;
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.8);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 100, 100, 0.3);
+    color: #fff;
+}
+
+/* Main */
+.main {
+    margin-left: 220px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar {
+    background: #fff;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.topbar h1 {
+    font-size: 1.2rem;
+    color: #0d3b8e;
+    font-weight: 700;
+}
+
+.user-badge {
+    background: #0d3b8e;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+}
+
+.content {
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Card */
+.card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.card h2 {
+    font-size: 1rem;
+    color: #0d3b8e;
+    margin-bottom: 18px;
+    font-weight: 700;
+}
+
+/* Form */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-group label {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.input-group input {
+    padding: 9px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.input-group input:focus {
+    border-color: #0d3b8e;
+}
+
+.btn-primary {
+    background: #0d3b8e;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background: #1565c0;
+}
+
+.form-msg {
+    font-size: 0.82rem;
+    min-height: 18px;
+    margin-bottom: 10px;
+}
+
+.form-msg.success { color: #16a34a; }
+.form-msg.error   { color: #dc2626; }
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+thead tr {
+    background: #f8fafc;
+}
+
+th {
+    text-align: left;
+    padding: 10px 14px;
+    color: #64748b;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+.loading {
+    text-align: center;
+    color: #94a3b8;
+    padding: 20px !important;
+}
+
+.badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.badge.active   { background: #dcfce7; color: #16a34a; }
+.badge.inactive { background: #fee2e2; color: #dc2626; }
+
+.btn-toggle {
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-toggle:hover {
+    background: #e2e8f0;
+}

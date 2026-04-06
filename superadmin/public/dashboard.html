@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury | Super Admin Dashboard</title>
+    <link rel="stylesheet" href="/superadmin/styles/dashboard.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="/superadmin/assets/logo.png" alt="Logo">
+            <span>SPUC Treasury</span>
+        </div>
+        <nav>
+            <a href="#" class="nav-item active">👥 Manage Admins</a>
+        </nav>
+        <button id="logout-btn" class="logout-btn">🚪 Logout</button>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1>Admin Management</h1>
+            <span id="superadmin-name" class="user-badge"></span>
+        </header>
+
+        <section class="content">
+            <!-- Add Admin Form -->
+            <div class="card">
+                <h2>Add New Admin</h2>
+                <p id="form-msg" class="form-msg"></p>
+                <form id="add-admin-form">
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Full Name</label>
+                            <input type="text" id="name" placeholder="Full Name" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Email</label>
+                            <input type="email" id="email" placeholder="Email" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Username</label>
+                            <input type="text" id="username" placeholder="Username" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <input type="password" id="password" placeholder="Password" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Admin</button>
+                </form>
+            </div>
+
+            <!-- Admins Table -->
+            <div class="card">
+                <h2>Admin Accounts</h2>
+                <table id="admins-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Username</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admins-tbody">
+                        <tr><td colspan="7" class="loading">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Redirect to login if not authenticated
+        async function checkAuth() {
+            const res = await fetch('/superadmin/me');
+            if (!res.ok) return window.location.href = '/superadmin';
+            const data = await res.json();
+            document.getElementById('superadmin-name').textContent = data.name;
+        }
+
+        async function loadAdmins() {
+            const res = await fetch('/superadmin/admins');
+            if (!res.ok) return;
+            const admins = await res.json();
+            const tbody = document.getElementById('admins-tbody');
+            if (!admins.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">No admins found.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = admins.map((a, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${a.name}</td>
+                    <td>${a.email}</td>
+                    <td>${a.username}</td>
+                    <td><span class="badge ${a.status}">${a.status}</span></td>
+                    <td>${a.created_at}</td>
+                    <td>
+                        <button class="btn-toggle" onclick="toggleStatus(${a.adminid}, '${a.status}')">
+                            ${a.status === 'active' ? 'Deactivate' : 'Activate'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('add-admin-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('form-msg');
+            msg.textContent = '';
+            msg.className = 'form-msg';
+
+            const body = {
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value
+            };
+
+            const res = await fetch('/superadmin/admins', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                msg.textContent = 'Admin added successfully.';
+                msg.classList.add('success');
+                e.target.reset();
+                loadAdmins();
+            } else {
+                msg.textContent = data.message || 'Failed to add admin.';
+                msg.classList.add('error');
+            }
+        });
+
+        async function toggleStatus(adminId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            const res = await fetch(`/superadmin/admins/${adminId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+            if (res.ok) loadAdmins();
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/superadmin/logout', { method: 'POST' });
+            window.location.href = '/superadmin';
+        });
+
+        checkAuth();
+        loadAdmins();
+    </script>
+</body>
+</html>
