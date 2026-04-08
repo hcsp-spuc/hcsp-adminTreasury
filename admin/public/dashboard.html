@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury | Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/admin/styles/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="/admin/assets/logo.png" alt="Logo" onerror="this.style.display='none'">
+            <div>
+                <span>Pangasiwaan ng Pananalapi</span>
+                <span>Lungsod ng Batangas</span>
+            </div>
+        </div>
+
+        <nav>
+            <a href="/admin/dashboard.html" class="nav-item active">
+                <i class="fa-solid fa-gauge-high"></i> Dashboard
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-file-excel"></i> Upload Excel
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-clock-rotate-left"></i> Report History
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-users-gear"></i> Manage Users
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-user-shield"></i> Pastors
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1>Admin Portal</h1>
+            <span id="admin-name" class="user-badge">Loading...</span>
+        </header>
+
+        <section class="content">
+            <div class="content-title">Dashboard</div>
+
+            <!-- Summary Cards -->
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="label">Total Tithes</div>
+                    <div class="amount" id="total-tithes">₱0.00</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Offerings</div>
+                    <div class="amount" id="total-offerings">₱0.00</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Amount</div>
+                    <div class="amount" id="total-amount">₱0.00</div>
+                </div>
+            </div>
+
+            <!-- Monthly Chart -->
+            <div class="panel">
+                <h2>Monthly Tithes and Offerings</h2>
+                <canvas id="titheChart"></canvas>
+            </div>
+
+            <!-- Last Upload Summary -->
+            <div class="panel">
+                <h2>Last Upload Summary</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="upload-tbody">
+                        <tr><td colspan="5" class="loading">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const fmt = (n) => '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+
+        async function checkAuth() {
+            const res = await fetch('/admin/me');
+            if (!res.ok) return window.location.href = '/admin';
+            const data = await res.json();
+            document.getElementById('admin-name').textContent = data.name;
+        }
+
+        async function loadSummary() {
+            try {
+                const res = await fetch('/admin/dashboard/summary');
+                if (!res.ok) return;
+                const data = await res.json();
+                document.getElementById('total-tithes').textContent = fmt(data.totalTithes ?? 0);
+                document.getElementById('total-offerings').textContent = fmt(data.totalOfferings ?? 0);
+                document.getElementById('total-amount').textContent = fmt(data.totalAmount ?? 0);
+            } catch (_) {}
+        }
+
+        async function loadChart() {
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            let tithes = new Array(12).fill(0);
+            let offerings = new Array(12).fill(0);
+
+            try {
+                const res = await fetch('/admin/dashboard/monthly');
+                if (res.ok) {
+                    const data = await res.json();
+                    data.forEach(row => {
+                        const idx = (row.month - 1);
+                        tithes[idx] = parseFloat(row.tithes) || 0;
+                        offerings[idx] = parseFloat(row.offerings) || 0;
+                    });
+                }
+            } catch (_) {}
+
+            new Chart(document.getElementById('titheChart'), {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Tithes',
+                            data: tithes,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Offerings',
+                            data: offerings,
+                            backgroundColor: '#ef4444',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        async function loadLastUpload() {
+            const tbody = document.getElementById('upload-tbody');
+            try {
+                const res = await fetch('/admin/dashboard/last-upload');
+                if (!res.ok) throw new Error();
+                const rows = await res.json();
+                if (!rows.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="loading">No upload data found.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = rows.map((r, i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${r.name}</td>
+                        <td>${r.type}</td>
+                        <td>${fmt(r.amount)}</td>
+                        <td>${r.date}</td>
+                    </tr>
+                `).join('');
+            } catch (_) {
+                tbody.innerHTML = '<tr><td colspan="5" class="loading">No data available.</td></tr>';
+            }
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/admin/logout', { method: 'POST' });
+            window.location.href = '/admin';
+        });
+
+        checkAuth();
+        loadSummary();
+        loadChart();
+        loadLastUpload();
+    </script>
+</body>
+</html>

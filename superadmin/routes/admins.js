@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const supabase = require('../../db/index');
 
 function requireAuth(req, res, next) {
@@ -25,9 +26,11 @@ router.post('/', requireAuth, async (req, res) => {
     if (!name || !email || !username || !password)
         return res.status(400).json({ message: 'All fields are required.' });
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const { error } = await supabase
         .from('tbl_admin')
-        .insert([{ name, email, username, password, superadminid: req.session.superadmin.id }]);
+        .insert([{ name, email, username, password: hashedPassword, superadminid: req.session.superadmin.id }]);
 
     if (error) {
         if (error.code === '23505') return res.status(409).json({ message: 'Username or email already exists.' });

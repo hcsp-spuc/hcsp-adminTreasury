@@ -20,6 +20,10 @@ app.use(session({
 app.use('/admin', express.static(path.join(__dirname, 'admin/public')));
 app.use('/superadmin', express.static(path.join(__dirname, 'superadmin/public')));
 
+// Admin routes
+const adminAuth = require('./admin/routes/auth');
+app.use('/admin', adminAuth);
+
 // Superadmin routes
 const superadminAuth   = require('./superadmin/routes/auth');
 const superadminAdmins = require('./superadmin/routes/admins');

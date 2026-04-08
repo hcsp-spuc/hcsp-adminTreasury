@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Treasury | Admin Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/admin/styles/index.css">
 </head>
 <body>
@@ -22,14 +26,15 @@
 
     <div class="card">
         <h3>ADMIN LOGIN</h3>
-        <form action="" method="POST">
+        <p id="login-msg" style="color:#ff8080;font-size:0.85rem;min-height:18px;margin-bottom:8px;"></p>
+        <form id="login-form">
             <div class="input-group">
-                <span>🔒</span>
-                <input type="text" placeholder="Username" required>
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="username" placeholder="Username" required>
             </div>
             <div class="input-group">
-                <span>🔒</span>
-                <input type="password" placeholder="Password" required>
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="password" placeholder="Password" required>
             </div>
             <button type="submit">LOGIN</button>
         </form>
@@ -37,5 +42,29 @@
     </div>
 
     <footer>User Connection: 100</footer>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('login-msg');
+            msg.textContent = '';
+
+            const res = await fetch('/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value.trim(),
+                    password: document.getElementById('password').value
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                window.location.href = '/admin/dashboard.html';
+            } else {
+                msg.textContent = data.message;
+            }
+        });
+    </script>
 </body>
 </html>

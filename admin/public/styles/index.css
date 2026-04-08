@@ -2,12 +2,12 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Montserrat', sans-serif;
 }
 
 body {
     min-height: 100vh;
-    background: radial-gradient(ellipse at center, #1565c0 0%, #0d3b8e 60%, #0a2a6e 100%);
+    background: url(/admin/assets/login-bg.png) center/cover no-repeat;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -58,31 +58,40 @@ body::before {
 
 .hero h1 {
     color: #ffffff;
-    font-size: 2.6rem;
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-size: 5.6rem;
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-shadow: 0 0 18px rgba(255,255,255,0.35), 0 2px 8px rgba(0,0,0,0.4);
+    line-height: 1.1;
 }
 
 .hero h2 {
-    color: #f5a623;
-    font-size: 2.6rem;
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-size: 4.6rem;
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #f5a623 0%, #ffe082 50%, #f5a623 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 8px rgba(245,166,35,0.45));
+    line-height: 1.1;
 }
 
 .card {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     border-radius: 16px;
-    padding: 36px 40px;
-    width: 340px;
+    padding: 50px 40px 95px 40px;
+    width: 425px;
     text-align: center;
     box-shadow: 0 8px 32px rgba(0,0,0,0.25);
 }
 
 .card h3 {
     color: #ffffff;
-    font-size: 1.1rem;
+    font-size: 2.1rem;
     letter-spacing: 2px;
     margin-bottom: 24px;
 }
@@ -97,7 +106,8 @@ body::before {
     gap: 10px;
 }
 
-.input-group span {
+.input-group span,
+.input-group i {
     font-size: 1rem;
     color: #f5a623;
 }
@@ -107,7 +117,7 @@ body::before {
     border: none;
     outline: none;
     color: #fff;
-    font-size: 0.9rem;
+    font-size: 22px;
     width: 100%;
 }
 
@@ -117,12 +127,12 @@ body::before {
 
 button[type="submit"] {
     margin-top: 10px;
-    width: 120px;
+    width: 150px;
     padding: 10px 0;
     background: #f5a623;
     color: #fff;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 18px;
     letter-spacing: 2px;
     border: none;
     border-radius: 8px;
@@ -136,7 +146,7 @@ button[type="submit"]:hover {
 
 .card p {
     margin-top: 16px;
-    font-size: 0.8rem;
+    font-size: 16px;
     color: rgba(255,255,255,0.8);
 }
 
