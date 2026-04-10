@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const supabase = require('../../db/index');
+const requireAuth = require('./middleware');
 
 // POST /admin/login
 router.post('/login', async (req, res) => {
@@ -31,9 +32,7 @@ router.post('/login', async (req, res) => {
 });
 
 // GET /admin/me
-router.get('/me', (req, res) => {
-    if (!req.session.admin)
-        return res.status(401).json({ message: 'Unauthorized.' });
+router.get('/me', requireAuth, (req, res) => {
     res.json(req.session.admin);
 });
 

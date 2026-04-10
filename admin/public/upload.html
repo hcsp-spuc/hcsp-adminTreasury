@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury | Upload Excel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/admin/styles/dashboard.css">
+    <link rel="stylesheet" href="/admin/styles/upload.css">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="/admin/assets/logo.png" alt="Logo" onerror="this.style.display='none'">
+            <div>
+                <span>South Philippine</span>
+                <span>Union Conference</span>
+            </div>
+        </div>
+
+        <nav>
+            <a href="/admin/dashboard.html" class="nav-item">
+                <i class="fa-solid fa-gauge-high"></i> Dashboard
+            </a>
+            <a href="/admin/upload.html" class="nav-item active">
+                <i class="fa-solid fa-file-excel"></i> Upload Excel
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-clock-rotate-left"></i> Report History
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-users-gear"></i> Manage Users
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-user-shield"></i> Pastors
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1 class="topbar-title">UPLOAD EXCEL</h1>
+            <span id="admin-name" class="user-badge">Loading...</span>
+        </header>
+
+        <section class="content">
+
+            <!-- Step 1: Download Template -->
+            <div class="upload-panel">
+                <div class="step-header">
+                    <div class="step-badge">1</div>
+                    <div>
+                        <div class="step-title">Download Template</div>
+                        <div class="step-desc">Download the Excel template with the required columns before uploading
+                            your data.</div>
+                    </div>
+                </div>
+                <div class="template-info">
+                    <div class="template-columns">
+                        <span class="col-badge">mission_name</span>
+                        <span class="col-badge">year</span>
+                        <span class="col-badge">month</span>
+                        <span class="col-badge">tithe_amount</span>
+                        <span class="col-badge">offering_amount</span>
+                    </div>
+                    <a href="/admin/upload/template" class="btn-download">
+                        <i class="fa-solid fa-download"></i> Download Template
+                    </a>
+                </div>
+            </div>
+
+            <!-- Step 2: Upload File -->
+            <div class="upload-panel">
+                <div class="step-header">
+                    <div class="step-badge">2</div>
+                    <div>
+                        <div class="step-title">Upload Excel File</div>
+                        <div class="step-desc">Upload your filled-in Excel file. Only <strong>.xlsx</strong> files using
+                            the template format are accepted.</div>
+                    </div>
+                </div>
+
+                <div id="drop-zone" class="drop-zone">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <p>Drag & drop your Excel file here, or <span class="browse-link"
+                            onclick="document.getElementById('file-input').click()">browse</span></p>
+                    <p class="drop-hint">Accepted format: .xlsx</p>
+                    <input type="file" id="file-input" accept=".xlsx" hidden>
+                </div>
+
+                <div id="file-preview" class="file-preview hidden">
+                    <i class="fa-solid fa-file-excel file-icon"></i>
+                    <div class="file-info">
+                        <span id="file-name" class="file-name"></span>
+                        <span id="file-size" class="file-size"></span>
+                    </div>
+                    <button class="btn-remove" onclick="clearFile()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div id="upload-status" class="upload-status hidden"></div>
+
+                <div class="upload-actions">
+                    <button id="upload-btn" class="btn-upload" disabled>
+                        <i class="fa-solid fa-upload"></i> Upload & Save
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div id="results-panel" class="upload-panel hidden">
+                <div class="step-header">
+                    <div class="step-badge success-badge"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <div class="step-title">Upload Results</div>
+                        <div id="result-summary" class="step-desc"></div>
+                    </div>
+                </div>
+                <div id="error-list" class="error-list hidden"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        async function checkAuth() {
+            const res = await fetch('/admin/me');
+            if (!res.ok) return window.location.href = '/admin';
+            const data = await res.json();
+            document.getElementById('admin-name').textContent = data.name;
+        }
+
+        const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
+        const filePreview = document.getElementById('file-preview');
+        const uploadBtn = document.getElementById('upload-btn');
+        let selectedFile = null;
+
+        fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file || !file.name.endsWith('.xlsx')) {
+                showStatus('Only .xlsx files are accepted.', 'error');
+                return;
+            }
+            selectedFile = file;
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('file-size').textContent = (file.size / 1024).toFixed(1) + ' KB';
+            filePreview.classList.remove('hidden');
+            dropZone.classList.add('hidden');
+            uploadBtn.disabled = false;
+            document.getElementById('upload-status').classList.add('hidden');
+            document.getElementById('results-panel').classList.add('hidden');
+        }
+
+        function clearFile() {
+            selectedFile = null;
+            fileInput.value = '';
+            filePreview.classList.add('hidden');
+            dropZone.classList.remove('hidden');
+            uploadBtn.disabled = true;
+            document.getElementById('upload-status').classList.add('hidden');
+            document.getElementById('results-panel').classList.add('hidden');
+        }
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('upload-status');
+            el.textContent = msg;
+            el.className = `upload-status ${type}`;
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+            showStatus('Uploading and processing...', 'info');
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const res = await fetch('/admin/upload/excel', { method: 'POST', body: formData });
+                const data = await res.json();
+
+                const resultsPanel = document.getElementById('results-panel');
+                const resultSummary = document.getElementById('result-summary');
+                const errorList = document.getElementById('error-list');
+
+                resultSummary.textContent = data.message;
+                resultsPanel.classList.remove('hidden');
+
+                if (data.errors && data.errors.length) {
+                    errorList.innerHTML = data.errors.map(e => `<div class="error-item"><i class="fa-solid fa-triangle-exclamation"></i> ${e}</div>`).join('');
+                    errorList.classList.remove('hidden');
+                } else {
+                    errorList.classList.add('hidden');
+                }
+
+                showStatus(res.ok ? 'Upload complete.' : data.message, res.ok ? 'success' : 'error');
+            } catch {
+                showStatus('An error occurred. Please try again.', 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fa-solid fa-upload"></i> Upload & Save';
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/admin/logout', { method: 'POST' });
+            window.location.href = '/admin';
+        });
+
+        checkAuth();
+    </script>
+</body>
+
+</html>

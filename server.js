@@ -16,19 +16,21 @@ app.use(session({
     cookie: { httpOnly: true, maxAge: 8 * 60 * 60 * 1000 } // 8 hours
 }));
 
-// Static files
-app.use('/admin', express.static(path.join(__dirname, 'admin/public')));
-app.use('/superadmin', express.static(path.join(__dirname, 'superadmin/public')));
-
 // Admin routes
-const adminAuth = require('./admin/routes/auth');
+const adminAuth   = require('./admin/routes/auth');
+const adminUpload = require('./admin/routes/upload');
 app.use('/admin', adminAuth);
+app.use('/admin/upload', adminUpload);
 
 // Superadmin routes
 const superadminAuth   = require('./superadmin/routes/auth');
 const superadminAdmins = require('./superadmin/routes/admins');
 app.use('/superadmin', superadminAuth);
 app.use('/superadmin/admins', superadminAdmins);
+
+// Static files (must come after API routes)
+app.use('/admin', express.static(path.join(__dirname, 'admin/public')));
+app.use('/superadmin', express.static(path.join(__dirname, 'superadmin/public')));
 
 // Portal entry points
 app.get('/admin', (req, res) => {
