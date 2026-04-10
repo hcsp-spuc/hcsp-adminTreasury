@@ -14,7 +14,7 @@ body {
 /* ── Sidebar ─────────────────────────────────────────── */
 .sidebar {
     width: 270px;
-    background: linear-gradient(180deg, #0d2f7a 0%, #071a4a 100%);
+    background: url('/admin/assets/sidebar-nav.png') center/cover no-repeat;
     display: flex;
     flex-direction: column;
     padding: 28px 18px;
@@ -142,7 +142,7 @@ body {
 
 /* ── Topbar ──────────────────────────────────────────── */
 .topbar {
-    background: linear-gradient(135deg, #0d2f7a 0%, #071a4a 100%);
+    background: linear-gradient(135deg, #091842 0%, #173b80 100%);
     padding: 0 32px;
     height: 70px;
     display: flex;
@@ -201,12 +201,6 @@ h1.topbar-title {
     gap: 28px;
 }
 
-.content-title {
-    font-size: 2.2rem;
-    color: #000000;
-    font-weight: 500;
-}
-
 .page-header {
     display: flex;
     align-items: center;
@@ -243,9 +237,9 @@ h1.topbar-title {
     gap: 20px;
 }
 
-.summary-card.tithes   { border-left-color: rgba(255,255,255,0.2); }
-.summary-card.offerings { border-left-color: #f5a623; }
-.summary-card.total    { border-left-color: #4ade80; }
+.summary-card.tithes   { border-left-color: rgba(23, 21, 136, 0.2); }
+.summary-card.offerings { border-left-color: #952323; background: linear-gradient(135deg, #ef4444 0%, #a10000 100%); }
+.summary-card.total    { border-left-color: #11542a; background: linear-gradient(135deg, #109d00 0%, #076600 100%); }
 
 .summary-icon {
     width: 56px;
