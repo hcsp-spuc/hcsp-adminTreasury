@@ -17,10 +17,12 @@ app.use(session({
 }));
 
 // Admin routes
-const adminAuth   = require('./admin/routes/auth');
-const adminUpload = require('./admin/routes/upload');
+const adminAuth      = require('./admin/routes/auth');
+const adminUpload    = require('./admin/routes/upload');
+const adminDashboard = require('./admin/routes/dashboard');
 app.use('/admin', adminAuth);
 app.use('/admin/upload', adminUpload);
+app.use('/admin/dashboard', adminDashboard);
 
 // Superadmin routes
 const superadminAuth   = require('./superadmin/routes/auth');
