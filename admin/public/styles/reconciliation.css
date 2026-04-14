@@ -1,0 +1,101 @@
+/* ── Filters ─────────────────────────────────────────── */
+.filter-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 160px;
+}
+
+.filter-group label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.filter-group select,
+.filter-group input {
+    padding: 10px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    font-family: 'Montserrat', sans-serif;
+    outline: none;
+    background: #fff;
+    transition: border-color 0.2s;
+}
+
+.filter-group select:focus,
+.filter-group input:focus { border-color: #0d2f7a; }
+
+.search-wrap {
+    position: relative;
+}
+
+.search-wrap i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.search-wrap input {
+    width: 100%;
+    padding-left: 34px;
+}
+
+/* ── Variance Colors ─────────────────────────────────── */
+.var-positive { color: #166534; font-weight: 700; }
+.var-negative { color: #991b1b; font-weight: 700; }
+
+/* ── Reference Cell ──────────────────────────────────── */
+.ref-cell {
+    font-family: monospace;
+    font-size: 0.88rem;
+    color: #475569;
+}
+
+/* ── Wider Modal ─────────────────────────────────────── */
+#recon-modal .modal {
+    max-width: 580px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-group select {
+    padding: 11px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: 'Montserrat', sans-serif;
+    outline: none;
+    background: #fff;
+    transition: border-color 0.2s;
+}
+
+.form-group select:focus { border-color: #0d2f7a; }
+
+.form-group input[type="date"] {
+    padding: 11px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: 'Montserrat', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-group input[type="date"]:focus { border-color: #0d2f7a; }

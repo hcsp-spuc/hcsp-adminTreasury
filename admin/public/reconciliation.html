@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury | Reconciliation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/admin/styles/dashboard.css">
+    <link rel="stylesheet" href="/admin/styles/budget.css">
+    <link rel="stylesheet" href="/admin/styles/reconciliation.css">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="/admin/assets/logo.png" alt="Logo" onerror="this.style.display='none'">
+            <div>
+                <span>South Philippine</span>
+                <span>Union Conference</span>
+            </div>
+        </div>
+
+        <nav>
+            <a href="/admin/dashboard.html" class="nav-item">
+                <i class="fa-solid fa-gauge-high"></i> Dashboard
+            </a>
+            <a href="/admin/upload.html" class="nav-item">
+                <i class="fa-solid fa-file-excel"></i> Upload Excel
+            </a>
+            <a href="/admin/budget.html" class="nav-item">
+                <i class="fa-solid fa-wallet"></i> Budget
+            </a>
+            <a href="/admin/reconciliation.html" class="nav-item active">
+                <i class="fa-solid fa-scale-balanced"></i> Reconciliation
+            </a>
+            <a href="/admin/history.html" class="nav-item">
+                <i class="fa-solid fa-clock-rotate-left"></i> Report History
+            </a>
+            <a href="/admin/profile.html" class="nav-item">
+                <i class="fa-solid fa-user-pen"></i> Profile
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1 class="topbar-title">RECONCILIATION</h1>
+            <span id="admin-name" class="user-badge">Loading...</span>
+        </header>
+
+        <section class="content">
+
+            <!-- Summary Cards -->
+            <div class="summary-grid">
+                <div class="summary-card tithes">
+                    <div class="summary-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+                    <div>
+                        <div class="label">Total Collected</div>
+                        <div class="amount" id="total-collected">₱0.00</div>
+                    </div>
+                </div>
+                <div class="summary-card offerings">
+                    <div class="summary-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                    <div>
+                        <div class="label">Total Remitted</div>
+                        <div class="amount" id="total-remitted">₱0.00</div>
+                    </div>
+                </div>
+                <div class="summary-card total">
+                    <div class="summary-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div>
+                        <div class="label">Variance</div>
+                        <div class="amount" id="variance">₱0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-filter"></i>
+                    <h2>Filter Records</h2>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Period</label>
+                        <select id="filter-period">
+                            <option value="">All Periods</option>
+                            <option value="this_month">This Month</option>
+                            <option value="last_month">Last Month</option>
+                            <option value="this_year">This Year</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Status</label>
+                        <select id="filter-status">
+                            <option value="">All</option>
+                            <option value="matched">Matched</option>
+                            <option value="unmatched">Unmatched</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <div class="search-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="search-input" placeholder="Search by name or reference...">
+                        </div>
+                    </div>
+                    <button class="btn-primary" id="filter-btn">
+                        <i class="fa-solid fa-magnifying-glass"></i> Search
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reconciliation Table -->
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <h2>Reconciliation Records</h2>
+                    <button class="btn-primary" id="add-record-btn">
+                        <i class="fa-solid fa-plus"></i> Add Record
+                    </button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Reference</th>
+                                <th>Name</th>
+                                <th>Collected</th>
+                                <th>Remitted</th>
+                                <th>Variance</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recon-tbody">
+                            <tr>
+                                <td colspan="9" class="empty-state">
+                                    <i class="fa-solid fa-scale-balanced"></i>
+                                    No reconciliation records found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Add/Edit Record Modal -->
+    <div class="modal-overlay" id="recon-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Record</h3>
+                <button class="modal-close" id="modal-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="recon-form">
+                <input type="hidden" id="recon-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Reference No.</label>
+                        <input type="text" id="recon-ref" placeholder="e.g. REC-2024-001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="recon-name" placeholder="Church / Person name" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount Collected (₱)</label>
+                        <input type="number" id="recon-collected" placeholder="0.00" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount Remitted (₱)</label>
+                        <input type="number" id="recon-remitted" placeholder="0.00" min="0" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="recon-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="recon-status">
+                            <option value="pending">Pending</option>
+                            <option value="matched">Matched</option>
+                            <option value="unmatched">Unmatched</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const fmt = (n) => '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+
+        async function checkAuth() {
+            const res = await fetch('/admin/me');
+            if (!res.ok) return window.location.href = '/admin';
+            const data = await res.json();
+            document.getElementById('admin-name').textContent = data.name;
+        }
+
+        async function loadRecords() {
+            const period = document.getElementById('filter-period').value;
+            const status = document.getElementById('filter-status').value;
+            const search = document.getElementById('search-input').value;
+            const tbody = document.getElementById('recon-tbody');
+
+            const params = new URLSearchParams();
+            if (period) params.set('period', period);
+            if (status) params.set('status', status);
+            if (search) params.set('search', search);
+
+            try {
+                const res = await fetch(`/admin/reconciliation?${params}`);
+                if (!res.ok) throw new Error();
+                const rows = await res.json();
+
+                if (!rows.length) {
+                    tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fa-solid fa-scale-balanced"></i>No reconciliation records found.</td></tr>`;
+                    updateSummary(0, 0);
+                    return;
+                }
+
+                let totalCollected = 0, totalRemitted = 0;
+                tbody.innerHTML = rows.map((r, i) => {
+                    const collected = parseFloat(r.collected) || 0;
+                    const remitted = parseFloat(r.remitted) || 0;
+                    const variance = collected - remitted;
+                    totalCollected += collected;
+                    totalRemitted += remitted;
+
+                    const statusMap = {
+                        matched:   { cls: 'status-ok',      label: 'Matched' },
+                        unmatched: { cls: 'status-over',    label: 'Unmatched' },
+                        pending:   { cls: 'status-warning', label: 'Pending' }
+                    };
+                    const s = statusMap[r.status] ?? { cls: 'status-warning', label: r.status };
+                    const varClass = variance === 0 ? '' : variance > 0 ? 'var-positive' : 'var-negative';
+
+                    return `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td class="ref-cell">${r.reference}</td>
+                            <td>${r.name}</td>
+                            <td>${fmt(collected)}</td>
+                            <td>${fmt(remitted)}</td>
+                            <td class="${varClass}">${fmt(variance)}</td>
+                            <td>${r.date}</td>
+                            <td><span class="status-badge ${s.cls}">${s.label}</span></td>
+                            <td>
+                                <button class="icon-btn edit-btn" data-row='${JSON.stringify(r)}' title="Edit">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="icon-btn delete-btn" data-id="${r.id}" title="Delete">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                }).join('');
+
+                updateSummary(totalCollected, totalRemitted);
+                attachRowActions();
+            } catch (_) {
+                tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="fa-solid fa-scale-balanced"></i>No data available.</td></tr>`;
+            }
+        }
+
+        function updateSummary(collected, remitted) {
+            const variance = collected - remitted;
+            document.getElementById('total-collected').textContent = fmt(collected);
+            document.getElementById('total-remitted').textContent = fmt(remitted);
+            const el = document.getElementById('variance');
+            el.textContent = fmt(variance);
+            el.className = 'amount ' + (variance === 0 ? '' : variance > 0 ? 'var-positive' : 'var-negative');
+        }
+
+        function attachRowActions() {
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const r = JSON.parse(btn.dataset.row);
+                    openModal(r);
+                });
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteRecord(btn.dataset.id));
+            });
+        }
+
+        function openModal(r = null) {
+            document.getElementById('modal-title').textContent = r ? 'Edit Record' : 'Add Record';
+            document.getElementById('recon-id').value       = r?.id ?? '';
+            document.getElementById('recon-ref').value      = r?.reference ?? '';
+            document.getElementById('recon-name').value     = r?.name ?? '';
+            document.getElementById('recon-collected').value = r?.collected ?? '';
+            document.getElementById('recon-remitted').value  = r?.remitted ?? '';
+            document.getElementById('recon-date').value     = r?.date ?? '';
+            document.getElementById('recon-status').value   = r?.status ?? 'pending';
+            document.getElementById('recon-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('recon-modal').classList.remove('active');
+            document.getElementById('recon-form').reset();
+        }
+
+        async function deleteRecord(id) {
+            if (!confirm('Delete this reconciliation record?')) return;
+            await fetch(`/admin/reconciliation/${id}`, { method: 'DELETE' });
+            loadRecords();
+        }
+
+        document.getElementById('add-record-btn').addEventListener('click', () => openModal());
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        document.getElementById('cancel-btn').addEventListener('click', closeModal);
+        document.getElementById('recon-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeModal();
+        });
+        document.getElementById('filter-btn').addEventListener('click', loadRecords);
+        document.getElementById('search-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') loadRecords();
+        });
+
+        document.getElementById('recon-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('recon-id').value;
+            const payload = {
+                reference:  document.getElementById('recon-ref').value,
+                name:       document.getElementById('recon-name').value,
+                collected:  document.getElementById('recon-collected').value,
+                remitted:   document.getElementById('recon-remitted').value,
+                date:       document.getElementById('recon-date').value,
+                status:     document.getElementById('recon-status').value
+            };
+            const url    = id ? `/admin/reconciliation/${id}` : '/admin/reconciliation';
+            const method = id ? 'PUT' : 'POST';
+            await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            closeModal();
+            loadRecords();
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/admin/logout', { method: 'POST' });
+            window.location.href = '/admin';
+        });
+
+        checkAuth();
+        loadRecords();
+    </script>
+</body>
+
+</html>
