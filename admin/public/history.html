@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury | Report History</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/admin/styles/dashboard.css">
+    <link rel="stylesheet" href="/admin/styles/budget.css">
+    <link rel="stylesheet" href="/admin/styles/reconciliation.css">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="/admin/assets/logo.png" alt="Logo" onerror="this.style.display='none'">
+            <div>
+                <span>South Philippine</span>
+                <span>Union Conference</span>
+            </div>
+        </div>
+
+        <nav>
+            <a href="/admin/dashboard.html" class="nav-item">
+                <i class="fa-solid fa-gauge-high"></i> Dashboard
+            </a>
+            <a href="/admin/upload.html" class="nav-item">
+                <i class="fa-solid fa-file-excel"></i> Upload Excel
+            </a>
+            <a href="/admin/budget.html" class="nav-item">
+                <i class="fa-solid fa-wallet"></i> Budget
+            </a>
+            <a href="/admin/reconciliation.html" class="nav-item">
+                <i class="fa-solid fa-scale-balanced"></i> Reconciliation
+            </a>
+            <a href="/admin/history.html" class="nav-item active">
+                <i class="fa-solid fa-clock-rotate-left"></i> Report History
+            </a>
+            <a href="/admin/profile.html" class="nav-item">
+                <i class="fa-solid fa-user-pen"></i> Profile
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1 class="topbar-title">REPORT HISTORY</h1>
+            <span id="admin-name" class="user-badge">Loading...</span>
+        </header>
+
+        <section class="content">
+
+            <!-- Filters -->
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-filter"></i>
+                    <h2>Filter Reports</h2>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Type</label>
+                        <select id="filter-type">
+                            <option value="">All Types</option>
+                            <option value="tithe">Tithe</option>
+                            <option value="offering">Offering</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Year</label>
+                        <select id="filter-year">
+                            <option value="">All Years</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <div class="search-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="search-input" placeholder="Search by name or file...">
+                        </div>
+                    </div>
+                    <button class="btn-primary" id="filter-btn">
+                        <i class="fa-solid fa-magnifying-glass"></i> Search
+                    </button>
+                </div>
+            </div>
+
+            <!-- History Table -->
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <h2>Upload History</h2>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>File Name</th>
+                                <th>Uploaded By</th>
+                                <th>Type</th>
+                                <th>Records</th>
+                                <th>Total Amount</th>
+                                <th>Uploaded At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-tbody">
+                            <tr>
+                                <td colspan="8" class="empty-state">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                    No report history found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination"></div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- View Details Modal -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 id="detail-title">Upload Details</h3>
+                <button class="modal-close" id="modal-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="detail-content">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fmt = (n) => '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        let currentPage = 1;
+        const perPage = 10;
+
+        async function checkAuth() {
+            const res = await fetch('/admin/me');
+            if (!res.ok) return window.location.href = '/admin';
+            const data = await res.json();
+            document.getElementById('admin-name').textContent = data.name;
+        }
+
+        async function populateYears() {
+            try {
+                const res = await fetch('/admin/history/years');
+                if (!res.ok) return;
+                const years = await res.json();
+                const sel = document.getElementById('filter-year');
+                years.forEach(y => {
+                    const opt = document.createElement('option');
+                    opt.value = y;
+                    opt.textContent = y;
+                    sel.appendChild(opt);
+                });
+            } catch (_) {}
+        }
+
+        async function loadHistory(page = 1) {
+            currentPage = page;
+            const type   = document.getElementById('filter-type').value;
+            const year   = document.getElementById('filter-year').value;
+            const search = document.getElementById('search-input').value;
+            const tbody  = document.getElementById('history-tbody');
+
+            const params = new URLSearchParams({ page, per_page: perPage });
+            if (type)   params.set('type', type);
+            if (year)   params.set('year', year);
+            if (search) params.set('search', search);
+
+            try {
+                const res = await fetch(`/admin/history?${params}`);
+                if (!res.ok) throw new Error();
+                const { data, total } = await res.json();
+
+                if (!data.length) {
+                    tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i>No report history found.</td></tr>`;
+                    document.getElementById('pagination').innerHTML = '';
+                    return;
+                }
+
+                tbody.innerHTML = data.map((r, i) => `
+                    <tr>
+                        <td>${(page - 1) * perPage + i + 1}</td>
+                        <td class="ref-cell">${r.file_name}</td>
+                        <td>${r.uploaded_by}</td>
+                        <td><span class="type-badge ${r.type === 'tithe' ? 'tithe' : 'offering'}">${r.type}</span></td>
+                        <td>${r.record_count ?? '—'}</td>
+                        <td>${fmt(r.total_amount ?? 0)}</td>
+                        <td>${r.uploaded_at}</td>
+                        <td>
+                            <button class="icon-btn view-btn" data-id="${r.id}" data-file="${r.file_name}" title="View">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button class="icon-btn delete-btn" data-id="${r.id}" title="Delete">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`).join('');
+
+                renderPagination(total, page);
+                attachRowActions();
+            } catch (_) {
+                tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i>No data available.</td></tr>`;
+            }
+        }
+
+        function renderPagination(total, page) {
+            const pages = Math.ceil(total / perPage);
+            const el = document.getElementById('pagination');
+            if (pages <= 1) { el.innerHTML = ''; return; }
+
+            let html = `<button class="page-btn" ${page === 1 ? 'disabled' : ''} data-page="${page - 1}">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>`;
+            for (let p = 1; p <= pages; p++) {
+                html += `<button class="page-btn ${p === page ? 'active' : ''}" data-page="${p}">${p}</button>`;
+            }
+            html += `<button class="page-btn" ${page === pages ? 'disabled' : ''} data-page="${page + 1}">
+                         <i class="fa-solid fa-chevron-right"></i>
+                     </button>`;
+            el.innerHTML = html;
+
+            el.querySelectorAll('.page-btn:not([disabled])').forEach(btn => {
+                btn.addEventListener('click', () => loadHistory(parseInt(btn.dataset.page)));
+            });
+        }
+
+        function attachRowActions() {
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => openDetail(btn.dataset.id, btn.dataset.file));
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteHistory(btn.dataset.id));
+            });
+        }
+
+        async function openDetail(id, fileName) {
+            document.getElementById('detail-title').textContent = fileName;
+            document.getElementById('detail-tbody').innerHTML = '<tr><td colspan="5" class="empty-state">Loading...</td></tr>';
+            document.getElementById('detail-modal').classList.add('active');
+
+            try {
+                const res = await fetch(`/admin/history/${id}/records`);
+                if (!res.ok) throw new Error();
+                const rows = await res.json();
+                document.getElementById('detail-tbody').innerHTML = rows.length
+                    ? rows.map((r, i) => `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td>${r.name}</td>
+                            <td><span class="type-badge ${r.type === 'tithe' ? 'tithe' : 'offering'}">${r.type}</span></td>
+                            <td>${fmt(r.amount)}</td>
+                            <td>${r.date}</td>
+                        </tr>`).join('')
+                    : '<tr><td colspan="5" class="empty-state">No records found.</td></tr>';
+            } catch (_) {
+                document.getElementById('detail-tbody').innerHTML = '<tr><td colspan="5" class="empty-state">Failed to load records.</td></tr>';
+            }
+        }
+
+        async function deleteHistory(id) {
+            if (!confirm('Delete this upload record and all its data?')) return;
+            await fetch(`/admin/history/${id}`, { method: 'DELETE' });
+            loadHistory(currentPage);
+        }
+
+        document.getElementById('modal-close').addEventListener('click', () => {
+            document.getElementById('detail-modal').classList.remove('active');
+        });
+        document.getElementById('detail-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) e.currentTarget.classList.remove('active');
+        });
+        document.getElementById('filter-btn').addEventListener('click', () => loadHistory(1));
+        document.getElementById('search-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') loadHistory(1);
+        });
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/admin/logout', { method: 'POST' });
+            window.location.href = '/admin';
+        });
+
+        checkAuth();
+        populateYears();
+        loadHistory();
+    </script>
+</body>
+
+</html>

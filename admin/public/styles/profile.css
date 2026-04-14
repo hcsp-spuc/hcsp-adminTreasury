@@ -1,0 +1,170 @@
+/* ── Profile Grid ────────────────────────────────────── */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 28px;
+    align-items: start;
+}
+
+/* ── Profile Card ────────────────────────────────────── */
+.profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 36px 28px;
+}
+
+.avatar-wrap {
+    margin-bottom: 8px;
+}
+
+.avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d2f7a, #173b80);
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 18px rgba(13,47,122,0.35);
+}
+
+.profile-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0d2f7a;
+}
+
+.profile-role {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #0d2f7a, #173b80);
+    padding: 4px 16px;
+    border-radius: 20px;
+}
+
+.profile-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+    color: #475569;
+    background: #f8faff;
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+
+.meta-item i {
+    color: #0d2f7a;
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* ── Profile Forms ───────────────────────────────────── */
+.profile-forms {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+/* ── Password Input ──────────────────────────────────── */
+.input-wrap {
+    position: relative;
+}
+
+.input-wrap input {
+    width: 100%;
+    padding-right: 44px;
+}
+
+.toggle-pw {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.toggle-pw:hover { color: #0d2f7a; }
+
+/* ── Form Messages ───────────────────────────────────── */
+.form-msg {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.msg-success { background: #f0fdf4; color: #15803d; }
+.msg-error   { background: #fef2f2; color: #b91c1c; }
+.hidden      { display: none !important; }
+
+/* ── Pagination (history page) ───────────────────────── */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding-top: 20px;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    color: #475569;
+    font-size: 0.88rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.page-btn:hover:not([disabled]):not(.active) {
+    background: #f0f4ff;
+    border-color: #0d2f7a;
+    color: #0d2f7a;
+}
+
+.page-btn.active {
+    background: linear-gradient(135deg, #0d2f7a, #173b80);
+    border-color: #0d2f7a;
+    color: #fff;
+}
+
+.page-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Larger modal for history detail ─────────────────── */
+.modal-lg { max-width: 700px; }
