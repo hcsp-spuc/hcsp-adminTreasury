@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury | Budget</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/admin/styles/dashboard.css">
+    <link rel="stylesheet" href="/admin/styles/budget.css">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="/admin/assets/logo.png" alt="Logo" onerror="this.style.display='none'">
+            <div>
+                <span>South Philippine</span>
+                <span>Union Conference</span>
+            </div>
+        </div>
+
+        <nav>
+            <a href="/admin/dashboard.html" class="nav-item">
+                <i class="fa-solid fa-gauge-high"></i> Dashboard
+            </a>
+            <a href="/admin/upload.html" class="nav-item">
+                <i class="fa-solid fa-file-excel"></i> Upload Excel
+            </a>
+            <a href="/admin/budget.html" class="nav-item active">
+                <i class="fa-solid fa-wallet"></i> Budget
+            </a>
+            <a href="/admin/reconciliation.html" class="nav-item">
+                <i class="fa-solid fa-scale-balanced"></i> Reconciliation
+            </a>
+            <a href="/admin/history.html" class="nav-item">
+                <i class="fa-solid fa-clock-rotate-left"></i> Report History
+            </a>
+            <a href="/admin/profile.html" class="nav-item">
+                <i class="fa-solid fa-user-pen"></i> Profile
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1 class="topbar-title">BUDGET</h1>
+            <span id="admin-name" class="user-badge">Loading...</span>
+        </header>
+
+        <section class="content">
+
+            <!-- Summary Cards -->
+            <div class="summary-grid">
+                <div class="summary-card tithes">
+                    <div class="summary-icon"><i class="fa-solid fa-wallet"></i></div>
+                    <div>
+                        <div class="label">Total Budget</div>
+                        <div class="amount" id="total-budget">₱0.00</div>
+                    </div>
+                </div>
+                <div class="summary-card offerings">
+                    <div class="summary-icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                    <div>
+                        <div class="label">Total Expenses</div>
+                        <div class="amount" id="total-expenses">₱0.00</div>
+                    </div>
+                </div>
+                <div class="summary-card total">
+                    <div class="summary-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+                    <div>
+                        <div class="label">Remaining Balance</div>
+                        <div class="amount" id="remaining-balance">₱0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Allocation Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-sliders"></i>
+                    <h2>Budget Allocation</h2>
+                    <button class="btn-primary" id="add-budget-btn">
+                        <i class="fa-solid fa-plus"></i> Add Budget
+                    </button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Category</th>
+                                <th>Allocated Amount</th>
+                                <th>Spent</th>
+                                <th>Remaining</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="budget-tbody">
+                            <tr>
+                                <td colspan="7" class="empty-state">
+                                    <i class="fa-solid fa-wallet"></i>
+                                    No budget records found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Add/Edit Budget Modal -->
+    <div class="modal-overlay" id="budget-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Budget</h3>
+                <button class="modal-close" id="modal-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="budget-form">
+                <input type="hidden" id="budget-id">
+                <div class="form-group">
+                    <label>Category</label>
+                    <input type="text" id="budget-category" placeholder="e.g. Operations" required>
+                </div>
+                <div class="form-group">
+                    <label>Allocated Amount (₱)</label>
+                    <input type="number" id="budget-amount" placeholder="0.00" min="0" step="0.01" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const fmt = (n) => '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+
+        async function checkAuth() {
+            const res = await fetch('/admin/me');
+            if (!res.ok) return window.location.href = '/admin';
+            const data = await res.json();
+            document.getElementById('admin-name').textContent = data.name;
+        }
+
+        async function loadBudget() {
+            const tbody = document.getElementById('budget-tbody');
+            try {
+                const res = await fetch('/admin/budget');
+                if (!res.ok) throw new Error();
+                const rows = await res.json();
+
+                if (!rows.length) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fa-solid fa-wallet"></i>No budget records found.</td></tr>`;
+                    updateSummary(0, 0);
+                    return;
+                }
+
+                let totalBudget = 0, totalSpent = 0;
+                tbody.innerHTML = rows.map((r, i) => {
+                    const allocated = parseFloat(r.allocated_amount) || 0;
+                    const spent = parseFloat(r.spent) || 0;
+                    const remaining = allocated - spent;
+                    totalBudget += allocated;
+                    totalSpent += spent;
+                    const pct = allocated > 0 ? (spent / allocated) * 100 : 0;
+                    const statusClass = pct >= 100 ? 'status-over' : pct >= 80 ? 'status-warning' : 'status-ok';
+                    const statusLabel = pct >= 100 ? 'Over Budget' : pct >= 80 ? 'Near Limit' : 'On Track';
+                    return `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td>${r.category}</td>
+                            <td>${fmt(allocated)}</td>
+                            <td>${fmt(spent)}</td>
+                            <td>${fmt(remaining)}</td>
+                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                            <td>
+                                <button class="icon-btn edit-btn" data-id="${r.id}" data-category="${r.category}" data-amount="${allocated}" title="Edit">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="icon-btn delete-btn" data-id="${r.id}" title="Delete">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                }).join('');
+
+                updateSummary(totalBudget, totalSpent);
+                attachRowActions();
+            } catch (_) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fa-solid fa-wallet"></i>No data available.</td></tr>`;
+            }
+        }
+
+        function updateSummary(budget, spent) {
+            document.getElementById('total-budget').textContent = fmt(budget);
+            document.getElementById('total-expenses').textContent = fmt(spent);
+            document.getElementById('remaining-balance').textContent = fmt(budget - spent);
+        }
+
+        function attachRowActions() {
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => openModal(btn.dataset.id, btn.dataset.category, btn.dataset.amount));
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteBudget(btn.dataset.id));
+            });
+        }
+
+        function openModal(id = '', category = '', amount = '') {
+            document.getElementById('modal-title').textContent = id ? 'Edit Budget' : 'Add Budget';
+            document.getElementById('budget-id').value = id;
+            document.getElementById('budget-category').value = category;
+            document.getElementById('budget-amount').value = amount;
+            document.getElementById('budget-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('budget-modal').classList.remove('active');
+            document.getElementById('budget-form').reset();
+        }
+
+        async function deleteBudget(id) {
+            if (!confirm('Delete this budget entry?')) return;
+            await fetch(`/admin/budget/${id}`, { method: 'DELETE' });
+            loadBudget();
+        }
+
+        document.getElementById('add-budget-btn').addEventListener('click', () => openModal());
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        document.getElementById('cancel-btn').addEventListener('click', closeModal);
+        document.getElementById('budget-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeModal();
+        });
+
+        document.getElementById('budget-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('budget-id').value;
+            const payload = {
+                category: document.getElementById('budget-category').value,
+                allocated_amount: document.getElementById('budget-amount').value
+            };
+            const url = id ? `/admin/budget/${id}` : '/admin/budget';
+            const method = id ? 'PUT' : 'POST';
+            await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            closeModal();
+            loadBudget();
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/admin/logout', { method: 'POST' });
+            window.location.href = '/admin';
+        });
+
+        checkAuth();
+        loadBudget();
+    </script>
+</body>
+
+</html>
