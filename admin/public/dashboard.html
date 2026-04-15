@@ -62,37 +62,52 @@
 
             <!-- Summary Cards -->
             <div class="summary-grid">
-                <div class="summary-card">
-                    <div class="label">Total Tithes</div>
-                    <div class="amount" id="total-tithes">₱0.00</div>
+                <div class="summary-card tithes">
+                    <div class="summary-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                    <div>
+                        <div class="label">Total Tithes</div>
+                        <div class="amount" id="total-tithes">₱0.00</div>
+                    </div>
                 </div>
                 <div class="summary-card offerings">
-                    <div class="label">Total Offerings</div>
-                    <div class="amount" id="total-offerings">₱0.00</div>
+                    <div class="summary-icon"><i class="fa-solid fa-gift"></i></div>
+                    <div>
+                        <div class="label">Total Offerings</div>
+                        <div class="amount" id="total-offerings">₱0.00</div>
+                    </div>
                 </div>
                 <div class="summary-card total">
-                    <div class="label">Total Amount</div>
-                    <div class="amount" id="total-amount">₱0.00</div>
+                    <div class="summary-icon"><i class="fa-solid fa-peso-sign"></i></div>
+                    <div>
+                        <div class="label">Total Amount</div>
+                        <div class="amount" id="total-amount">₱0.00</div>
+                    </div>
                 </div>
             </div>
 
             <!-- Monthly Chart -->
             <div class="panel">
-                <h2>Monthly Tithes and Offerings</h2>
+                <div class="panel-header">
+                    <i class="fa-solid fa-chart-column"></i>
+                    <h2>Monthly Tithes and Offerings</h2>
+                </div>
                 <canvas id="titheChart"></canvas>
             </div>
 
             <!-- Last Upload Summary -->
             <div class="panel">
-                <h2>Last Upload Summary</h2>
+                <div class="panel-header">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <h2>Last Upload Summary</h2>
+                </div>
                 <table>
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Name</th>
+                            <th>Mission</th>
                             <th>Type</th>
                             <th>Amount</th>
-                            <th>Date</th>
+                            <th>Date Recorded</th>
                         </tr>
                     </thead>
                     <tbody id="upload-tbody">
@@ -112,7 +127,7 @@
             const res = await fetch('/admin/me');
             if (!res.ok) return window.location.href = '/admin';
             const data = await res.json();
-            document.getElementById('admin-name').textContent = data.name;
+            document.getElementById('admin-name').innerHTML = `<i class="fa-solid fa-user-shield"></i> ${data.name}`;
         }
 
         async function loadSummary() {
@@ -186,8 +201,8 @@
                 tbody.innerHTML = rows.map((r, i) => `
                     <tr>
                         <td>${i + 1}</td>
-                        <td>${r.name}</td>
-                        <td>${r.type}</td>
+                        <td>${r.name || '—'}</td>
+                        <td><span class="type-badge ${r.type.toLowerCase()}">${r.type}</span></td>
                         <td>${fmt(r.amount)}</td>
                         <td>${r.date}</td>
                     </tr>

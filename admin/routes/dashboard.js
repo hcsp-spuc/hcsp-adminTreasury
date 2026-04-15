@@ -3,44 +3,39 @@ const router = express.Router();
 const supabase = require('../../db/index');
 const requireAuth = require('./middleware');
 
-// GET /admin/dashboard/summary — total tithes, offerings, and combined for the admin's missions
+async function getAdminMissionIds(adminId) {
+    const { data } = await supabase
+        .from('tbl_admin')
+        .select('missionid')
+        .eq('adminid', adminId)
+        .single();
+    return data?.missionid ? [data.missionid] : [];
+}
+
+// GET /admin/dashboard/summary
 router.get('/summary', requireAuth, async (req, res) => {
     const adminId = req.session.admin.id;
-
-    const { data: missions } = await supabase
-        .from('tbl_mission')
-        .select('missionid')
-        .eq('adminid', adminId);
-
-    if (!missions || !missions.length) return res.json({ totalTithes: 0, totalOfferings: 0, totalAmount: 0 });
-
-    const missionIds = missions.map(m => m.missionid);
+    const missionIds = await getAdminMissionIds(adminId);
+    if (!missionIds.length) return res.json({ totalTithes: 0, totalOfferings: 0, totalAmount: 0 });
 
     const [{ data: tithes }, { data: offerings }] = await Promise.all([
         supabase.from('tbl_tithes').select('amount').in('missionid', missionIds),
         supabase.from('tbl_offerings').select('amount').in('missionid', missionIds)
     ]);
 
-    const totalTithes = (tithes || []).reduce((s, r) => s + parseFloat(r.amount), 0);
+    const totalTithes   = (tithes   || []).reduce((s, r) => s + parseFloat(r.amount), 0);
     const totalOfferings = (offerings || []).reduce((s, r) => s + parseFloat(r.amount), 0);
 
     res.json({ totalTithes, totalOfferings, totalAmount: totalTithes + totalOfferings });
 });
 
-// GET /admin/dashboard/monthly — per-month tithes and offerings totals for the current year
+// GET /admin/dashboard/monthly
 router.get('/monthly', requireAuth, async (req, res) => {
     const adminId = req.session.admin.id;
+    const missionIds = await getAdminMissionIds(adminId);
+    if (!missionIds.length) return res.json([]);
+
     const currentYear = new Date().getFullYear();
-
-    const { data: missions } = await supabase
-        .from('tbl_mission')
-        .select('missionid')
-        .eq('adminid', adminId);
-
-    if (!missions || !missions.length) return res.json([]);
-
-    const missionIds = missions.map(m => m.missionid);
-
     const { data: fiscalYear } = await supabase
         .from('tbl_fiscal_year')
         .select('yearid')
@@ -67,29 +62,27 @@ router.get('/monthly', requireAuth, async (req, res) => {
     res.json(Object.values(monthly).sort((a, b) => a.month - b.month));
 });
 
-// GET /admin/dashboard/last-upload — rows from the most recent upload batch
+// GET /admin/dashboard/last-upload
 router.get('/last-upload', requireAuth, async (req, res) => {
     const adminId = req.session.admin.id;
+    const missionIds = await getAdminMissionIds(adminId);
+    if (!missionIds.length) return res.json([]);
 
-    const { data: missions } = await supabase
+    // Get mission name
+    const { data: mission } = await supabase
         .from('tbl_mission')
         .select('missionid, name')
-        .eq('adminid', adminId);
+        .in('missionid', missionIds);
 
-    if (!missions || !missions.length) return res.json([]);
+    const missionMap = Object.fromEntries((mission || []).map(m => [m.missionid, m.name]));
 
-    const missionIds = missions.map(m => m.missionid);
-    const missionMap = Object.fromEntries(missions.map(m => [m.missionid, m.name]));
-
-    // Find the latest date_recorded across tithes and offerings
     const [{ data: latestTithe }, { data: latestOffering }] = await Promise.all([
         supabase.from('tbl_tithes').select('date_recorded').in('missionid', missionIds).order('date_recorded', { ascending: false }).limit(1),
         supabase.from('tbl_offerings').select('date_recorded').in('missionid', missionIds).order('date_recorded', { ascending: false }).limit(1)
     ]);
 
-    const lastTitheDate = latestTithe?.[0]?.date_recorded;
-    const lastOfferingDate = latestOffering?.[0]?.date_recorded;
-    const lastDate = [lastTitheDate, lastOfferingDate].filter(Boolean).sort().pop();
+    const lastDate = [latestTithe?.[0]?.date_recorded, latestOffering?.[0]?.date_recorded]
+        .filter(Boolean).sort().pop();
 
     if (!lastDate) return res.json([]);
 
@@ -99,7 +92,7 @@ router.get('/last-upload', requireAuth, async (req, res) => {
     ]);
 
     const rows = [
-        ...(tithes || []).map(r => ({ name: missionMap[r.missionid], type: 'Tithe', amount: r.amount, date: r.date_recorded })),
+        ...(tithes   || []).map(r => ({ name: missionMap[r.missionid], type: 'Tithe',    amount: r.amount, date: r.date_recorded })),
         ...(offerings || []).map(r => ({ name: missionMap[r.missionid], type: 'Offering', amount: r.amount, date: r.date_recorded }))
     ];
 

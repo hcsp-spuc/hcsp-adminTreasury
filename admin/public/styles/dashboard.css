@@ -370,3 +370,10 @@ tbody tr:last-child td {
     margin-bottom: 10px;
     opacity: 0.4;
 }
+
+.loading {
+    text-align: center;
+    color: #94a3b8;
+    padding: 28px !important;
+    font-size: 0.9rem;
+}
