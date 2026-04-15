@@ -1,27 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Treasury | Super Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/superadmin/styles/dashboard.css">
 </head>
+
 <body>
     <aside class="sidebar">
         <div class="sidebar-logo">
-            <img src="/superadmin/assets/logo.png" alt="Logo">
-            <span>SPUC Treasury</span>
+            <img src="/superadmin/assets/logo.png" alt="Logo" onerror="this.style.display='none'">
+            <div>
+                <span>South Philippine</span>
+                <span>Union Conference</span>
+            </div>
         </div>
         <nav>
-            <a href="#" class="nav-item active">👥 Manage Admins</a>
+            <a href="#" class="nav-item active">
+                <i class="fa-solid fa-users-gear"></i> Manage Admins
+            </a>
         </nav>
-        <button id="logout-btn" class="logout-btn">🚪 Logout</button>
+        <div class="sidebar-bottom">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
     </aside>
 
     <main class="main">
         <header class="topbar">
-            <h1>Admin Management</h1>
-            <span id="superadmin-name" class="user-badge"></span>
+            <h1 class="topbar-title">ADMIN MANAGEMENT</h1>
+            <span id="superadmin-name" class="user-badge"><i class="fa-solid fa-shield-halved"></i> Loading...</span>
         </header>
 
         <section class="content">
@@ -68,7 +83,9 @@
                         </tr>
                     </thead>
                     <tbody id="admins-tbody">
-                        <tr><td colspan="7" class="loading">Loading...</td></tr>
+                        <tr>
+                            <td colspan="7" class="loading">Loading...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -81,7 +98,7 @@
             const res = await fetch('/superadmin/me');
             if (!res.ok) return window.location.href = '/superadmin';
             const data = await res.json();
-            document.getElementById('superadmin-name').textContent = data.name;
+            document.getElementById('superadmin-name').innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${data.name}`;
         }
 
         async function loadAdmins() {
@@ -159,4 +176,5 @@
         loadAdmins();
     </script>
 </body>
+
 </html>
