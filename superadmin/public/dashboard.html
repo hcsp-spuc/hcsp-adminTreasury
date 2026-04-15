@@ -22,8 +22,17 @@
             </div>
         </div>
         <nav>
-            <a href="#" class="nav-item active">
+            <a href="/superadmin/dashboard.html" class="nav-item active">
                 <i class="fa-solid fa-users-gear"></i> Manage Admins
+            </a>
+            <a href="/superadmin/missions.html" class="nav-item">
+                <i class="fa-solid fa-building-columns"></i> Missions
+            </a>
+            <a href="/superadmin/fiscal-years.html" class="nav-item">
+                <i class="fa-solid fa-calendar-days"></i> Fiscal Years
+            </a>
+            <a href="/superadmin/system-reports.html" class="nav-item">
+                <i class="fa-solid fa-clock-rotate-left"></i> System Reports
             </a>
         </nav>
         <div class="sidebar-bottom">
@@ -62,6 +71,12 @@
                             <label>Password</label>
                             <input type="password" id="password" placeholder="Password" required>
                         </div>
+                        <div class="input-group">
+                            <label>Assign Mission <span style="font-weight:400;color:#94a3b8">(optional)</span></label>
+                            <select id="missionid">
+                                <option value="">— No Mission —</option>
+                            </select>
+                        </div>
                     </div>
                     <button type="submit" class="btn-primary">Add Admin</button>
                 </form>
@@ -77,6 +92,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Username</th>
+                            <th>Mission</th>
                             <th>Status</th>
                             <th>Created</th>
                             <th>Action</th>
@@ -84,7 +100,7 @@
                     </thead>
                     <tbody id="admins-tbody">
                         <tr>
-                            <td colspan="7" class="loading">Loading...</td>
+                            <td colspan="8" class="loading">Loading...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -101,13 +117,26 @@
             document.getElementById('superadmin-name').innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${data.name}`;
         }
 
+        async function loadMissionOptions() {
+            const res = await fetch('/superadmin/missions');
+            if (!res.ok) return;
+            const missions = await res.json();
+            const select = document.getElementById('missionid');
+            missions.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.missionid;
+                opt.textContent = m.name;
+                select.appendChild(opt);
+            });
+        }
+
         async function loadAdmins() {
             const res = await fetch('/superadmin/admins');
             if (!res.ok) return;
             const admins = await res.json();
             const tbody = document.getElementById('admins-tbody');
             if (!admins.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="loading">No admins found.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="loading">No admins found.</td></tr>';
                 return;
             }
             tbody.innerHTML = admins.map((a, i) => `
@@ -116,6 +145,7 @@
                     <td>${a.name}</td>
                     <td>${a.email}</td>
                     <td>${a.username}</td>
+                    <td>${a.mission_name}</td>
                     <td><span class="badge ${a.status}">${a.status}</span></td>
                     <td>${a.created_at}</td>
                     <td>
@@ -137,7 +167,8 @@
                 name: document.getElementById('name').value.trim(),
                 email: document.getElementById('email').value.trim(),
                 username: document.getElementById('username').value.trim(),
-                password: document.getElementById('password').value
+                password: document.getElementById('password').value,
+                missionid: document.getElementById('missionid').value || null
             };
 
             const res = await fetch('/superadmin/admins', {
@@ -173,6 +204,7 @@
         });
 
         checkAuth();
+        loadMissionOptions();
         loadAdmins();
     </script>
 </body>

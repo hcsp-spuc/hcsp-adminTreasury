@@ -85,18 +85,17 @@ router.post('/excel', requireAuth, upload.single('file'), async (req, res) => {
             continue;
         }
 
-        // Get or create mission
+        // Get mission by name only (missions are shared across admins)
         let { data: mission } = await supabase
             .from('tbl_mission')
             .select('missionid')
             .eq('name', missionName)
-            .eq('adminid', adminId)
             .single();
 
         if (!mission) {
             const { data: newMission, error: mErr } = await supabase
                 .from('tbl_mission')
-                .insert({ adminid: adminId, name: missionName })
+                .insert({ name: missionName })
                 .select('missionid')
                 .single();
             if (mErr) { errors.push(`Row ${rowNum}: Could not create mission "${missionName}".`); continue; }

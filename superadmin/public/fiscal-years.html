@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury | Fiscal Years</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/superadmin/styles/dashboard.css">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="/superadmin/assets/logo.png" alt="Logo" onerror="this.style.display='none'">
+            <div>
+                <span>South Philippine</span>
+                <span>Union Conference</span>
+            </div>
+        </div>
+        <nav>
+            <a href="/superadmin/dashboard.html" class="nav-item">
+                <i class="fa-solid fa-users-gear"></i> Manage Admins
+            </a>
+            <a href="/superadmin/missions.html" class="nav-item">
+                <i class="fa-solid fa-building-columns"></i> Missions
+            </a>
+            <a href="/superadmin/fiscal-years.html" class="nav-item active">
+                <i class="fa-solid fa-calendar-days"></i> Fiscal Years
+            </a>
+            <a href="/superadmin/system-reports.html" class="nav-item">
+                <i class="fa-solid fa-clock-rotate-left"></i> System Reports
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1 class="topbar-title">FISCAL YEARS</h1>
+            <span id="superadmin-name" class="user-badge"><i class="fa-solid fa-shield-halved"></i> Loading...</span>
+        </header>
+
+        <section class="content">
+            <!-- Add Fiscal Year Form -->
+            <div class="card">
+                <h2>Add Fiscal Year</h2>
+                <p id="form-msg" class="form-msg"></p>
+                <form id="add-fy-form">
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Year</label>
+                            <input type="number" id="year" placeholder="e.g. 2025" min="2000" max="2100" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Start Date</label>
+                            <input type="date" id="start_date" required>
+                        </div>
+                        <div class="input-group">
+                            <label>End Date</label>
+                            <input type="date" id="end_date" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Fiscal Year</button>
+                </form>
+            </div>
+
+            <!-- Fiscal Years Table -->
+            <div class="card">
+                <h2>Fiscal Year Records</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Year</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fy-tbody">
+                        <tr><td colspan="5" class="loading">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        async function checkAuth() {
+            const res = await fetch('/superadmin/me');
+            if (!res.ok) return window.location.href = '/superadmin';
+            const data = await res.json();
+            document.getElementById('superadmin-name').innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${data.name}`;
+        }
+
+        async function loadFiscalYears() {
+            const res = await fetch('/superadmin/fiscal-years');
+            const tbody = document.getElementById('fy-tbody');
+            if (!res.ok) {
+                tbody.innerHTML = '<tr><td colspan="5" class="loading">Failed to load fiscal years.</td></tr>';
+                return;
+            }
+            const years = await res.json();
+            if (!years.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="loading">No fiscal years found.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = years.map((y, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${y.year}</td>
+                    <td>${y.start_date}</td>
+                    <td>${y.end_date}</td>
+                    <td>
+                        <button class="btn-delete" onclick="deleteFiscalYear(${y.yearid})">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('add-fy-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('form-msg');
+            msg.textContent = '';
+            msg.className = 'form-msg';
+
+            const body = {
+                year: parseInt(document.getElementById('year').value),
+                start_date: document.getElementById('start_date').value,
+                end_date: document.getElementById('end_date').value
+            };
+
+            const res = await fetch('/superadmin/fiscal-years', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                msg.textContent = 'Fiscal year added successfully.';
+                msg.classList.add('success');
+                e.target.reset();
+                loadFiscalYears();
+            } else {
+                msg.textContent = data.message || 'Failed to add fiscal year.';
+                msg.classList.add('error');
+            }
+        });
+
+        async function deleteFiscalYear(id) {
+            if (!confirm('Delete this fiscal year? This cannot be undone.')) return;
+            const res = await fetch(`/superadmin/fiscal-years/${id}`, { method: 'DELETE' });
+            if (res.ok) loadFiscalYears();
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/superadmin/logout', { method: 'POST' });
+            window.location.href = '/superadmin';
+        });
+
+        checkAuth();
+        loadFiscalYears();
+    </script>
+</body>
+
+</html>

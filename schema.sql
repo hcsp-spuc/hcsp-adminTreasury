@@ -22,6 +22,7 @@ CREATE TABLE tbl_superadmin (
 CREATE TABLE tbl_admin (
   adminID       SERIAL        PRIMARY KEY,
   superadminID  INT           NOT NULL REFERENCES tbl_superadmin(superadminID) ON DELETE RESTRICT,
+  missionID     INT           REFERENCES tbl_mission(missionID) ON DELETE SET NULL,
   name          VARCHAR(100)  NOT NULL,
   email         VARCHAR(150)  NOT NULL UNIQUE,
   username      VARCHAR(50)   NOT NULL UNIQUE,
@@ -35,7 +36,6 @@ CREATE TABLE tbl_admin (
 -- ============================================================
 CREATE TABLE tbl_mission (
   missionID   SERIAL        PRIMARY KEY,
-  adminID     INT           NOT NULL REFERENCES tbl_admin(adminID) ON DELETE RESTRICT,
   name        VARCHAR(100)  NOT NULL,
   address     TEXT,
   contactNo   VARCHAR(20),

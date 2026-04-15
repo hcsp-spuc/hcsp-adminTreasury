@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury | System Reports</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/superadmin/styles/dashboard.css">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="/superadmin/assets/logo.png" alt="Logo" onerror="this.style.display='none'">
+            <div>
+                <span>South Philippine</span>
+                <span>Union Conference</span>
+            </div>
+        </div>
+        <nav>
+            <a href="/superadmin/dashboard.html" class="nav-item">
+                <i class="fa-solid fa-users-gear"></i> Manage Admins
+            </a>
+            <a href="/superadmin/missions.html" class="nav-item">
+                <i class="fa-solid fa-building-columns"></i> Missions
+            </a>
+            <a href="/superadmin/fiscal-years.html" class="nav-item">
+                <i class="fa-solid fa-calendar-days"></i> Fiscal Years
+            </a>
+            <a href="/superadmin/system-reports.html" class="nav-item active">
+                <i class="fa-solid fa-clock-rotate-left"></i> System Reports
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1 class="topbar-title">SYSTEM REPORTS</h1>
+            <span id="superadmin-name" class="user-badge"><i class="fa-solid fa-shield-halved"></i> Loading...</span>
+        </header>
+
+        <section class="content">
+            <div class="card">
+                <h2>Activity Audit Log</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Admin</th>
+                            <th>Mission</th>
+                            <th>Fiscal Year</th>
+                            <th>Action</th>
+                            <th>Date & Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-tbody">
+                        <tr><td colspan="6" class="loading">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        async function checkAuth() {
+            const res = await fetch('/superadmin/me');
+            if (!res.ok) return window.location.href = '/superadmin';
+            const data = await res.json();
+            document.getElementById('superadmin-name').innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${data.name}`;
+        }
+
+        async function loadReports() {
+            const res = await fetch('/superadmin/system-reports');
+            const tbody = document.getElementById('reports-tbody');
+            if (!res.ok) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">Failed to load reports.</td></tr>';
+                return;
+            }
+            const logs = await res.json();
+            if (!logs.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">No activity logs found.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = logs.map((l, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${l.admin_name}</td>
+                    <td>${l.mission_name || '—'}</td>
+                    <td>${l.year || '—'}</td>
+                    <td>${l.action}</td>
+                    <td>${new Date(l.date).toLocaleString('en-PH')}</td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/superadmin/logout', { method: 'POST' });
+            window.location.href = '/superadmin';
+        });
+
+        checkAuth();
+        loadReports();
+    </script>
+</body>
+
+</html>

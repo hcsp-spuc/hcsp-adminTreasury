@@ -12,16 +12,22 @@ function requireAuth(req, res, next) {
 router.get('/', requireAuth, async (req, res) => {
     const { data, error } = await supabase
         .from('tbl_admin')
-        .select('adminid, name, email, username, status, created_at')
+        .select('adminid, name, email, username, status, created_at, missionid, tbl_mission(name)')
         .order('adminid', { ascending: true });
 
     if (error) return res.status(500).json({ message: 'Failed to fetch admins.' });
-    res.json(data);
+
+    const result = data.map(a => ({
+        ...a,
+        mission_name: a.tbl_mission?.name || '—'
+    }));
+
+    res.json(result);
 });
 
 // POST /superadmin/admins
 router.post('/', requireAuth, async (req, res) => {
-    const { name, email, username, password } = req.body;
+    const { name, email, username, password, missionid } = req.body;
 
     if (!name || !email || !username || !password)
         return res.status(400).json({ message: 'All fields are required.' });
@@ -30,7 +36,12 @@ router.post('/', requireAuth, async (req, res) => {
 
     const { error } = await supabase
         .from('tbl_admin')
-        .insert([{ name, email, username, password: hashedPassword, superadminid: req.session.superadmin.id }]);
+        .insert([{
+            name, email, username,
+            password: hashedPassword,
+            superadminid: req.session.superadmin.id,
+            missionid: missionid || null
+        }]);
 
     if (error) {
         if (error.code === '23505') return res.status(409).json({ message: 'Username or email already exists.' });
@@ -55,6 +66,20 @@ router.patch('/:id/status', requireAuth, async (req, res) => {
 
     if (error) return res.status(500).json({ message: 'Failed to update status.' });
     res.json({ message: 'Status updated.' });
+});
+
+// PATCH /superadmin/admins/:id/mission
+router.patch('/:id/mission', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const { missionid } = req.body;
+
+    const { error } = await supabase
+        .from('tbl_admin')
+        .update({ missionid: missionid || null })
+        .eq('adminid', id);
+
+    if (error) return res.status(500).json({ message: 'Failed to assign mission.' });
+    res.json({ message: 'Mission assigned.' });
 });
 
 module.exports = router;

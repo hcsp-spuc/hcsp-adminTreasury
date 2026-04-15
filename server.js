@@ -25,10 +25,16 @@ app.use('/admin/upload', adminUpload);
 app.use('/admin/dashboard', adminDashboard);
 
 // Superadmin routes
-const superadminAuth   = require('./superadmin/routes/auth');
-const superadminAdmins = require('./superadmin/routes/admins');
+const superadminAuth          = require('./superadmin/routes/auth');
+const superadminAdmins        = require('./superadmin/routes/admins');
+const superadminMissions      = require('./superadmin/routes/missions');
+const superadminFiscalYears   = require('./superadmin/routes/fiscal-years');
+const superadminSystemReports = require('./superadmin/routes/system-reports');
 app.use('/superadmin', superadminAuth);
 app.use('/superadmin/admins', superadminAdmins);
+app.use('/superadmin/missions', superadminMissions);
+app.use('/superadmin/fiscal-years', superadminFiscalYears);
+app.use('/superadmin/system-reports', superadminSystemReports);
 
 // Static files (must come after API routes)
 app.use('/admin', express.static(path.join(__dirname, 'admin/public')));

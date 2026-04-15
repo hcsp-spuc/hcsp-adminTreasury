@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury | Missions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/superadmin/styles/dashboard.css">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="/superadmin/assets/logo.png" alt="Logo" onerror="this.style.display='none'">
+            <div>
+                <span>South Philippine</span>
+                <span>Union Conference</span>
+            </div>
+        </div>
+        <nav>
+            <a href="/superadmin/dashboard.html" class="nav-item">
+                <i class="fa-solid fa-users-gear"></i> Manage Admins
+            </a>
+            <a href="/superadmin/missions.html" class="nav-item active">
+                <i class="fa-solid fa-building-columns"></i> Missions
+            </a>
+            <a href="/superadmin/fiscal-years.html" class="nav-item">
+                <i class="fa-solid fa-calendar-days"></i> Fiscal Years
+            </a>
+            <a href="/superadmin/system-reports.html" class="nav-item">
+                <i class="fa-solid fa-clock-rotate-left"></i> System Reports
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <h1 class="topbar-title">MISSIONS</h1>
+            <span id="superadmin-name" class="user-badge"><i class="fa-solid fa-shield-halved"></i> Loading...</span>
+        </header>
+
+        <section class="content">
+
+            <!-- Add Mission Form -->
+            <div class="card">
+                <h2>Add New Mission</h2>
+                <p id="form-msg" class="form-msg"></p>
+                <form id="add-mission-form">
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Mission Name</label>
+                            <input type="text" id="name" placeholder="Mission Name" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Address</label>
+                            <input type="text" id="address" placeholder="Address">
+                        </div>
+                        <div class="input-group">
+                            <label>Contact No.</label>
+                            <input type="text" id="contactno" placeholder="Contact No.">
+                        </div>
+                        <div class="input-group">
+                            <label>Email</label>
+                            <input type="email" id="email" placeholder="Email">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Mission</button>
+                </form>
+            </div>
+
+            <!-- Missions Table -->
+            <div class="card">
+                <h2>All Missions</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Mission Name</th>
+                            <th>Address</th>
+                            <th>Contact No.</th>
+                            <th>Email</th>
+                            <th>No. of Admins</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="missions-tbody">
+                        <tr><td colspan="7" class="loading">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Edit Mission</h3>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p id="edit-msg" class="form-msg"></p>
+            <form id="edit-mission-form">
+                <input type="hidden" id="edit-id">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Mission Name</label>
+                        <input type="text" id="edit-name" placeholder="Mission Name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Address</label>
+                        <input type="text" id="edit-address" placeholder="Address">
+                    </div>
+                    <div class="input-group">
+                        <label>Contact No.</label>
+                        <input type="text" id="edit-contactno" placeholder="Contact No.">
+                    </div>
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" id="edit-email" placeholder="Email">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function checkAuth() {
+            const res = await fetch('/superadmin/me');
+            if (!res.ok) return window.location.href = '/superadmin';
+            const data = await res.json();
+            document.getElementById('superadmin-name').innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${data.name}`;
+        }
+
+        async function loadMissions() {
+            const res = await fetch('/superadmin/missions');
+            const tbody = document.getElementById('missions-tbody');
+            if (!res.ok) {
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">Failed to load missions.</td></tr>';
+                return;
+            }
+            const missions = await res.json();
+            if (!missions.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">No missions found.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = missions.map((m, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${m.name}</td>
+                    <td>${m.address || '—'}</td>
+                    <td>${m.contactno || '—'}</td>
+                    <td>${m.email || '—'}</td>
+                    <td><span class="badge-count">${m.admin_count}</span></td>
+                    <td class="action-cell">
+                        <button class="btn-edit" onclick="openEdit(${m.missionid}, '${escStr(m.name)}', '${escStr(m.address)}', '${escStr(m.contactno)}', '${escStr(m.email)}')">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                        <button class="btn-delete" onclick="deleteMission(${m.missionid}, '${escStr(m.name)}')">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function escStr(val) {
+            return (val || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        document.getElementById('add-mission-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('form-msg');
+            msg.textContent = '';
+            msg.className = 'form-msg';
+
+            const body = {
+                name: document.getElementById('name').value.trim(),
+                address: document.getElementById('address').value.trim(),
+                contactno: document.getElementById('contactno').value.trim(),
+                email: document.getElementById('email').value.trim()
+            };
+
+            const res = await fetch('/superadmin/missions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                msg.textContent = 'Mission added successfully.';
+                msg.classList.add('success');
+                e.target.reset();
+                loadMissions();
+            } else {
+                msg.textContent = data.message || 'Failed to add mission.';
+                msg.classList.add('error');
+            }
+        });
+
+        function openEdit(id, name, address, contactno, email) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-address').value = address === 'null' ? '' : address;
+            document.getElementById('edit-contactno').value = contactno === 'null' ? '' : contactno;
+            document.getElementById('edit-email').value = email === 'null' ? '' : email;
+            document.getElementById('edit-msg').textContent = '';
+            document.getElementById('edit-msg').className = 'form-msg';
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        document.getElementById('edit-mission-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('edit-msg');
+            msg.textContent = '';
+            msg.className = 'form-msg';
+
+            const id = document.getElementById('edit-id').value;
+            const body = {
+                name: document.getElementById('edit-name').value.trim(),
+                address: document.getElementById('edit-address').value.trim(),
+                contactno: document.getElementById('edit-contactno').value.trim(),
+                email: document.getElementById('edit-email').value.trim()
+            };
+
+            const res = await fetch(`/superadmin/missions/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                closeModal();
+                loadMissions();
+            } else {
+                msg.textContent = data.message || 'Failed to update mission.';
+                msg.classList.add('error');
+            }
+        });
+
+        async function deleteMission(id, name) {
+            if (!confirm(`Delete mission "${name}"?\n\nWARNING: This will permanently delete all associated tithes, offerings, budgets, and reconciliation records.`)) return;
+            const res = await fetch(`/superadmin/missions/${id}`, { method: 'DELETE' });
+            if (res.ok) loadMissions();
+        }
+
+        // Close modal on overlay click
+        document.getElementById('edit-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('edit-modal')) closeModal();
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/superadmin/logout', { method: 'POST' });
+            window.location.href = '/superadmin';
+        });
+
+        checkAuth();
+        loadMissions();
+    </script>
+</body>
+
+</html>
