@@ -253,8 +253,8 @@ h1.topbar-title {
 }
 
 .summary-card.tithes   .summary-icon { background: rgba(255,255,255,0.12); color: #fff; }
-.summary-card.offerings .summary-icon { background: rgba(245,166,35,0.2); color: #f5a623; }
-.summary-card.total    .summary-icon { background: rgba(74,222,128,0.15); color: #4ade80; }
+.summary-card.offerings .summary-icon { background: rgba(255,255,255,0.12); color: #fff; }
+.summary-card.total    .summary-icon { background: rgba(255,255,255,0.12); color: #fff; }
 
 .summary-card .label {
     font-size: 0.82rem;
@@ -355,7 +355,7 @@ tbody tr:last-child td {
 }
 
 .type-badge.tithe    { background: #e8eeff; color: #0d2f7a; }
-.type-badge.offering { background: #fff4e0; color: #c47d00; }
+.type-badge.offering { background: #f9d1d1e8; color: #d11212; }
 
 .empty-state {
     text-align: center;
