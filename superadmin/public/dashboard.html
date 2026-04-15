@@ -108,6 +108,44 @@
         </section>
     </main>
 
+    <!-- Edit Admin Modal -->
+    <div id="edit-modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Edit Admin</h3>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p id="edit-msg" class="form-msg"></p>
+            <form id="edit-admin-form">
+                <input type="hidden" id="edit-id">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <input type="text" id="edit-name" placeholder="Full Name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" id="edit-email" placeholder="Email" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Username</label>
+                        <input type="text" id="edit-username" placeholder="Username" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Assign Mission <span style="font-weight:400;color:#94a3b8">(optional)</span></label>
+                        <select id="edit-missionid">
+                            <option value="">— No Mission —</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Redirect to login if not authenticated
         async function checkAuth() {
@@ -121,12 +159,17 @@
             const res = await fetch('/superadmin/missions');
             if (!res.ok) return;
             const missions = await res.json();
-            const select = document.getElementById('missionid');
+            const addSelect = document.getElementById('missionid');
+            const editSelect = document.getElementById('edit-missionid');
             missions.forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m.missionid;
-                opt.textContent = m.name;
-                select.appendChild(opt);
+                const makeOpt = () => {
+                    const opt = document.createElement('option');
+                    opt.value = m.missionid;
+                    opt.textContent = m.name;
+                    return opt;
+                };
+                addSelect.appendChild(makeOpt());
+                editSelect.appendChild(makeOpt());
             });
         }
 
@@ -148,7 +191,10 @@
                     <td>${a.mission_name}</td>
                     <td><span class="badge ${a.status}">${a.status}</span></td>
                     <td>${a.created_at}</td>
-                    <td>
+                    <td class="action-cell">
+                        <button class="btn-edit" onclick="openEdit(${a.adminid}, '${escStr(a.name)}', '${escStr(a.email)}', '${escStr(a.username)}', '${a.missionid || ''}')">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
                         <button class="btn-toggle" onclick="toggleStatus(${a.adminid}, '${a.status}')">
                             ${a.status === 'active' ? 'Deactivate' : 'Activate'}
                         </button>
@@ -186,6 +232,58 @@
                 msg.textContent = data.message || 'Failed to add admin.';
                 msg.classList.add('error');
             }
+        });
+
+        function escStr(val) {
+            return (val || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function openEdit(id, name, email, username, missionid) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-email').value = email;
+            document.getElementById('edit-username').value = username;
+            document.getElementById('edit-missionid').value = missionid;
+            document.getElementById('edit-msg').textContent = '';
+            document.getElementById('edit-msg').className = 'form-msg';
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        document.getElementById('edit-admin-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('edit-msg');
+            msg.textContent = '';
+            msg.className = 'form-msg';
+
+            const id = document.getElementById('edit-id').value;
+            const body = {
+                name: document.getElementById('edit-name').value.trim(),
+                email: document.getElementById('edit-email').value.trim(),
+                username: document.getElementById('edit-username').value.trim(),
+                missionid: document.getElementById('edit-missionid').value || null
+            };
+
+            const res = await fetch(`/superadmin/admins/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                closeModal();
+                loadAdmins();
+            } else {
+                msg.textContent = data.message || 'Failed to update admin.';
+                msg.classList.add('error');
+            }
+        });
+
+        document.getElementById('edit-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('edit-modal')) closeModal();
         });
 
         async function toggleStatus(adminId, currentStatus) {

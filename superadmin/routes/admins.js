@@ -51,6 +51,26 @@ router.post('/', requireAuth, async (req, res) => {
     res.status(201).json({ message: 'Admin added successfully.' });
 });
 
+// PUT /superadmin/admins/:id
+router.put('/:id', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const { name, email, username, missionid } = req.body;
+
+    if (!name || !email || !username)
+        return res.status(400).json({ message: 'Name, email, and username are required.' });
+
+    const { error } = await supabase
+        .from('tbl_admin')
+        .update({ name, email, username, missionid: missionid || null })
+        .eq('adminid', id);
+
+    if (error) {
+        if (error.code === '23505') return res.status(409).json({ message: 'Username or email already exists.' });
+        return res.status(500).json({ message: 'Failed to update admin.' });
+    }
+    res.json({ message: 'Admin updated successfully.' });
+});
+
 // PATCH /superadmin/admins/:id/status
 router.patch('/:id/status', requireAuth, async (req, res) => {
     const { id } = req.params;
